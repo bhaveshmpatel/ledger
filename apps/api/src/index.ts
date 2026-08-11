@@ -7,6 +7,7 @@ import { authRoutes } from "./modules/auth/routes";
 import { customerRoutes } from "./modules/customers/routes";
 import { productRoutes } from "./modules/products/routes";
 import { challanRoutes } from "./modules/challans/routes";
+import { userRoutes } from "./modules/users/routes";
 import { dashboardRoutes } from "./modules/dashboard/routes";
 
 const app = new Hono();
@@ -27,6 +28,7 @@ api.route("/auth", authRoutes);
 api.route("/customers", customerRoutes);
 api.route("/products", productRoutes);
 api.route("/challans", challanRoutes);
+api.route("/users", userRoutes);
 api.route("/dashboard", dashboardRoutes);
 
 app.route("/api/v1", api);

@@ -125,36 +125,78 @@ export const challanItems = pgTable("challan_items", {
 // ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
+
+// users → customers (via customers.createdBy)
+// users → customerNotes (via customerNotes.createdBy)
+// users → stockMovements (via stockMovements.createdBy)
+// users → challans (via challans.createdBy)
+// Each many() is named to match the one() on the child side.
 export const usersRelations = relations(users, ({ many }) => ({
-  customers: many(customers),
-  challans: many(challans),
+  createdCustomers:      many(customers,      { relationName: "customerCreatedBy" }),
+  createdCustomerNotes:  many(customerNotes,  { relationName: "customerNoteCreatedBy" }),
+  createdStockMovements: many(stockMovements, { relationName: "stockMovementCreatedBy" }),
+  createdChallans:       many(challans,       { relationName: "challanCreatedBy" }),
 }));
 
 export const customersRelations = relations(customers, ({ one, many }) => ({
-  createdByUser: one(users, { fields: [customers.createdBy], references: [users.id] }),
-  notes: many(customerNotes),
+  createdByUser: one(users, {
+    relationName: "customerCreatedBy",
+    fields: [customers.createdBy],
+    references: [users.id],
+  }),
+  notes:    many(customerNotes),
   challans: many(challans),
 }));
 
 export const customerNotesRelations = relations(customerNotes, ({ one }) => ({
-  customer: one(customers, { fields: [customerNotes.customerId], references: [customers.id] }),
+  customer: one(customers, {
+    fields: [customerNotes.customerId],
+    references: [customers.id],
+  }),
+  createdByUser: one(users, {
+    relationName: "customerNoteCreatedBy",
+    fields: [customerNotes.createdBy],
+    references: [users.id],
+  }),
 }));
 
 export const productsRelations = relations(products, ({ many }) => ({
-  movements: many(stockMovements),
+  movements:    many(stockMovements),
   challanItems: many(challanItems),
 }));
 
 export const stockMovementsRelations = relations(stockMovements, ({ one }) => ({
-  product: one(products, { fields: [stockMovements.productId], references: [products.id] }),
+  product: one(products, {
+    fields: [stockMovements.productId],
+    references: [products.id],
+  }),
+  createdByUser: one(users, {
+    relationName: "stockMovementCreatedBy",
+    fields: [stockMovements.createdBy],
+    references: [users.id],
+  }),
 }));
 
 export const challansRelations = relations(challans, ({ one, many }) => ({
-  customer: one(customers, { fields: [challans.customerId], references: [customers.id] }),
+  customer: one(customers, {
+    fields: [challans.customerId],
+    references: [customers.id],
+  }),
+  createdByUser: one(users, {
+    relationName: "challanCreatedBy",
+    fields: [challans.createdBy],
+    references: [users.id],
+  }),
   items: many(challanItems),
 }));
 
 export const challanItemsRelations = relations(challanItems, ({ one }) => ({
-  challan: one(challans, { fields: [challanItems.challanId], references: [challans.id] }),
-  product: one(products, { fields: [challanItems.productId], references: [products.id] }),
+  challan: one(challans, {
+    fields: [challanItems.challanId],
+    references: [challans.id],
+  }),
+  product: one(products, {
+    fields: [challanItems.productId],
+    references: [products.id],
+  }),
 }));

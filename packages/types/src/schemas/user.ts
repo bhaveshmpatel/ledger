@@ -1,0 +1,19 @@
+import { z } from "zod";
+import { ROLES } from "./auth";
+
+export const createUserSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  role: z.enum(ROLES),
+});
+export type CreateUserInput = z.infer<typeof createUserSchema>;
+
+export const updateUserSchema = z.object({
+  name: z.string().min(2).optional(),
+  email: z.string().email().optional(),
+  role: z.enum(ROLES).optional(),
+  isActive: z.boolean().optional(),
+  password: z.string().min(8).optional(), // allow password reset
+});
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
