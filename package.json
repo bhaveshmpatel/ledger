@@ -1,0 +1,21 @@
+{
+  "name": "erp-crm",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:generate": "bun --cwd packages/db run generate",
+    "db:migrate": "bun --cwd packages/db run migrate",
+    "db:seed": "bun --cwd packages/db run seed",
+    "db:up": "docker compose up -d postgres"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.0",
+    "typescript": "^5.5.4"
+  },
+  "packageManager": "bun@1.1.20"
+}
