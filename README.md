@@ -1,4 +1,4 @@
-# Mini ERP + CRM Operations Portal
+# LEDGER: Mini ERP + CRM Operations Portal
 
 A wholesale/distribution operations portal: customers (CRM), products &
 inventory, and sales challans with transactional stock control. Built as a

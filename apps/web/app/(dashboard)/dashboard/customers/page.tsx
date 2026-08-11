@@ -7,6 +7,7 @@ import { useApiGet } from "@/hooks/use-api";
 import { useAuth, can } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
+import { Pagination } from "@/components/ui/pagination";
 
 interface Customer {
   id: string;
@@ -21,10 +22,14 @@ interface Customer {
 export default function CustomersPage() {
   const { user, accessToken } = useAuth();
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [customerType, setCustomerType] = useState("");
+  const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
-  const { data, loading, refetch } = useApiGet<{ data: Customer[] }>(
-    `/customers?search=${encodeURIComponent(search)}&limit=50`,
-    [search]
+
+  const { data, loading, refetch } = useApiGet<{ data: Customer[], meta: { totalPages: number } }>(
+    `/customers?search=${encodeURIComponent(search)}&status=${status}&type=${customerType}&page=${page}&limit=10`,
+    [search, status, customerType, page]
   );
 
   return (
@@ -44,14 +49,38 @@ export default function CustomersPage() {
         )}
       </div>
 
-      <div className="mt-6 flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2">
-        <Search size={16} className="text-muted" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, business, or mobile"
-          className="focus-ring w-full text-sm outline-none"
-        />
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-1 items-center gap-2 rounded-md border border-line bg-white px-3 py-2">
+          <Search size={16} className="text-muted" />
+          <input
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by name, business, or mobile"
+            className="focus-ring w-full text-sm outline-none"
+          />
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={status}
+            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+            className="focus-ring rounded-md border border-line bg-white px-3 py-2 text-sm capitalize outline-none"
+          >
+            <option value="">All statuses</option>
+            <option value="lead">Lead</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <select
+            value={customerType}
+            onChange={(e) => { setCustomerType(e.target.value); setPage(1); }}
+            className="focus-ring rounded-md border border-line bg-white px-3 py-2 text-sm capitalize outline-none"
+          >
+            <option value="">All types</option>
+            <option value="retail">Retail</option>
+            <option value="wholesale">Wholesale</option>
+            <option value="distributor">Distributor</option>
+          </select>
+        </div>
       </div>
 
       {showForm && (
@@ -64,8 +93,8 @@ export default function CustomersPage() {
         />
       )}
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-line bg-white">
-        <table className="w-full text-sm">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-line bg-white">
+        <table className="w-full text-sm min-w-[800px]">
           <thead className="border-b border-line bg-ink/[0.02] text-left text-xs uppercase text-muted">
             <tr>
               <th className="px-4 py-3">Name</th>
@@ -96,6 +125,9 @@ export default function CustomersPage() {
             )}
           </tbody>
         </table>
+        {data?.meta && (
+          <Pagination page={page} totalPages={data.meta.totalPages} onPageChange={setPage} />
+        )}
       </div>
     </div>
   );

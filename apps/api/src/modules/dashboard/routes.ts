@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { desc, eq, sql, count } from "drizzle-orm";
+import { desc, eq, and, sql, count } from "drizzle-orm";
 import { db, schema } from "@erp/db";
 import { requireAuth } from "../../middleware/auth";
 
@@ -24,6 +24,21 @@ dashboardRoutes.get("/summary", async (c) => {
 
   const recentChallans = await db.select().from(schema.challans).orderBy(desc(schema.challans.createdAt)).limit(5);
 
+  const salesHistory = await db
+    .select({
+      date: sql<string>`TO_CHAR(DATE(${schema.challans.createdAt}), 'Mon DD')`,
+      units: sql<number>`SUM(${schema.challans.totalQuantity})::int`,
+    })
+    .from(schema.challans)
+    .where(
+      and(
+        eq(schema.challans.status, "confirmed"),
+        sql`${schema.challans.createdAt} >= NOW() - INTERVAL '30 days'`
+      )
+    )
+    .groupBy(sql`DATE(${schema.challans.createdAt})`)
+    .orderBy(sql`DATE(${schema.challans.createdAt}) ASC`);
+
   return c.json({
     data: {
       customerCount,
@@ -32,6 +47,7 @@ dashboardRoutes.get("/summary", async (c) => {
       confirmedChallans,
       lowStock,
       recentChallans,
+      salesHistory,
     },
   });
 });

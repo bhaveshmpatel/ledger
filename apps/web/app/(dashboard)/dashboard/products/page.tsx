@@ -7,6 +7,7 @@ import { useApiGet } from "@/hooks/use-api";
 import { useAuth, can } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
+import { Pagination } from "@/components/ui/pagination";
 
 interface Product {
   id: string; name: string; sku: string; category: string; unitPrice: string;
@@ -16,8 +17,13 @@ interface Product {
 export default function ProductsPage() {
   const { user, accessToken } = useAuth();
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
-  const { data, refetch } = useApiGet<{ data: Product[] }>(`/products?search=${encodeURIComponent(search)}&limit=50`, [search]);
+  const { data, refetch } = useApiGet<{ data: Product[], meta: { totalPages: number } }>(
+    `/products?search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}&page=${page}&limit=10`,
+    [search, category, page]
+  );
 
   return (
     <div>
@@ -33,15 +39,37 @@ export default function ProductsPage() {
         )}
       </div>
 
-      <div className="mt-6 flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2">
-        <Search size={16} className="text-muted" />
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name" className="focus-ring w-full text-sm outline-none" />
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-1 items-center gap-2 rounded-md border border-line bg-white px-3 py-2">
+          <Search size={16} className="text-muted" />
+          <input
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by SKU or Name"
+            className="focus-ring w-full text-sm outline-none"
+          />
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={category}
+            onChange={(e) => { setCategory(e.target.value); setPage(1); }}
+            className="focus-ring rounded-md border border-line bg-white px-3 py-2 text-sm outline-none"
+          >
+            <option value="">All Categories</option>
+            <option value="Hardware">Hardware</option>
+            <option value="Plumbing">Plumbing</option>
+            <option value="Electrical">Electrical</option>
+            <option value="Paints">Paints</option>
+            <option value="Tools">Tools</option>
+            <option value="Accessories">Accessories</option>
+          </select>
+        </div>
       </div>
 
       {showForm && <NewProductForm token={accessToken!} onCreated={() => { setShowForm(false); refetch(); }} />}
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-line bg-white">
-        <table className="w-full text-sm">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-line bg-white">
+        <table className="w-full text-sm min-w-[800px]">
           <thead className="border-b border-line bg-ink/[0.02] text-left text-xs uppercase text-muted">
             <tr>
               <th className="px-4 py-3">SKU</th><th className="px-4 py-3">Name</th><th className="px-4 py-3">Category</th>
@@ -64,8 +92,12 @@ export default function ProductsPage() {
                 </tr>
               );
             })}
+            {data?.data.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted">No products found.</td></tr>}
           </tbody>
         </table>
+        {data?.meta && (
+          <Pagination page={page} totalPages={data.meta.totalPages} onPageChange={setPage} />
+        )}
       </div>
     </div>
   );

@@ -235,8 +235,8 @@ export default function ChallanDetailPage({ params }: { params: { id: string } }
 
       {/* ── Items table ─────────────────────────────────────────────── */}
       {!editing && (
-        <div className="mt-6 overflow-hidden rounded-lg border border-line bg-white">
-          <table className="w-full text-sm">
+        <div className="mt-6 overflow-x-auto rounded-lg border border-line bg-white">
+          <table className="w-full text-sm min-w-[600px]">
             <thead className="border-b border-line bg-ink/[0.02] text-left text-xs uppercase text-muted">
               <tr><th className="px-4 py-2">SKU</th><th className="px-4 py-2">Product</th><th className="px-4 py-2">Qty</th><th className="px-4 py-2">Rate</th><th className="px-4 py-2">Amount</th></tr>
             </thead>

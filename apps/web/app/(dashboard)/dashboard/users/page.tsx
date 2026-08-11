@@ -172,8 +172,8 @@ export default function UsersPage() {
       </div>
 
       {/* ── Users table ────────────────────────────────────────────────── */}
-      <div className="mt-8 overflow-hidden rounded-lg border border-line bg-white">
-        <table className="w-full text-sm">
+      <div className="mt-8 overflow-x-auto rounded-lg border border-line bg-white">
+        <table className="w-full text-sm min-w-[800px]">
           <thead className="border-b border-line bg-ink/[0.03] text-left text-xs uppercase text-muted">
             <tr>
               <th className="px-4 py-3">Name</th>

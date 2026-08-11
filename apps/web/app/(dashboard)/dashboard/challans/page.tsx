@@ -6,13 +6,20 @@ import { Plus } from "lucide-react";
 import { useApiGet } from "@/hooks/use-api";
 import { useAuth, can } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
+import { Search } from "lucide-react";
+import { Pagination } from "@/components/ui/pagination";
 
 interface Challan { id: string; challanNumber: string; status: string; totalQuantity: number; createdAt: string; }
 
 export default function ChallansPage() {
   const { user } = useAuth();
+  const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
-  const { data } = useApiGet<{ data: Challan[] }>(`/challans?status=${status}&limit=50`, [status]);
+  const [page, setPage] = useState(1);
+  const { data } = useApiGet<{ data: Challan[], meta: { totalPages: number } }>(
+    `/challans?search=${encodeURIComponent(search)}&status=${status}&page=${page}&limit=10`,
+    [search, status, page]
+  );
 
   return (
     <div>
@@ -28,20 +35,31 @@ export default function ChallansPage() {
         )}
       </div>
 
-      <div className="mt-6 flex gap-2">
-        {["", "draft", "confirmed", "cancelled"].map((s) => (
-          <button
-            key={s}
-            onClick={() => setStatus(s)}
-            className={`focus-ring rounded-md border px-3 py-1.5 text-xs font-medium capitalize ${status === s ? "border-ink bg-ink text-paper" : "border-line text-muted hover:bg-ink/5"}`}
-          >
-            {s || "All"}
-          </button>
-        ))}
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-1 items-center gap-2 rounded-md border border-line bg-white px-3 py-2">
+          <Search size={16} className="text-muted" />
+          <input
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by Challan Number"
+            className="focus-ring w-full text-sm outline-none"
+          />
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
+          {["", "draft", "confirmed", "cancelled"].map((s) => (
+            <button
+              key={s}
+              onClick={() => { setStatus(s); setPage(1); }}
+              className={`focus-ring whitespace-nowrap rounded-md border px-3 py-1.5 text-xs font-medium capitalize ${status === s ? "border-ink bg-ink text-paper" : "border-line bg-white text-muted hover:bg-ink/5"}`}
+            >
+              {s || "All statuses"}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-line bg-white">
-        <table className="w-full text-sm">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-line bg-white">
+        <table className="w-full text-sm min-w-[600px]">
           <thead className="border-b border-line bg-ink/[0.02] text-left text-xs uppercase text-muted">
             <tr><th className="px-4 py-3">Challan #</th><th className="px-4 py-3">Total qty</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Created</th></tr>
           </thead>
@@ -59,6 +77,9 @@ export default function ChallansPage() {
             {data?.data.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-muted">No challans yet.</td></tr>}
           </tbody>
         </table>
+        {data?.meta && (
+          <Pagination page={page} totalPages={data.meta.totalPages} onPageChange={setPage} />
+        )}
       </div>
     </div>
   );

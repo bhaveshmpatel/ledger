@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { and, desc, eq, count } from "drizzle-orm";
+import { and, desc, eq, count, ilike } from "drizzle-orm";
 import { db, schema } from "@erp/db";
 import { createChallanSchema, updateChallanSchema, paginationQuerySchema } from "@erp/types";
 import { requireAuth, requireRole } from "../../middleware/auth";
@@ -13,11 +13,12 @@ challanRoutes.use("*", requireAuth);
 
 // GET /challans
 challanRoutes.get("/", zValidator("query", paginationQuerySchema), async (c) => {
-  const { page, limit } = c.req.valid("query");
+  const { page, limit, search } = c.req.valid("query");
   const status = c.req.query("status");
   const customerId = c.req.query("customerId");
 
   const conditions = [];
+  if (search) conditions.push(ilike(schema.challans.challanNumber, `%${search}%`));
   if (status) conditions.push(eq(schema.challans.status, status as any));
   if (customerId) conditions.push(eq(schema.challans.customerId, customerId));
   const where = conditions.length ? and(...conditions) : undefined;
