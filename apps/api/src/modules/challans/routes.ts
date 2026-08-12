@@ -23,10 +23,11 @@ challanRoutes.get("/", zValidator("query", paginationQuerySchema), async (c) => 
   if (customerId) conditions.push(eq(schema.challans.customerId, customerId));
   const where = conditions.length ? and(...conditions) : undefined;
 
-  const [rows, [{ value: total }]] = await Promise.all([
+  const [rows, totalResult] = await Promise.all([
     db.select().from(schema.challans).where(where).orderBy(desc(schema.challans.createdAt)).limit(limit).offset(offsetFor(page, limit)),
     db.select({ value: count() }).from(schema.challans).where(where),
   ]);
+  const total = totalResult[0]?.value ?? 0;
 
   return c.json(paginate(rows, total, page, limit));
 });

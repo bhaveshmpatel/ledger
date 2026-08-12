@@ -17,7 +17,7 @@ userRoutes.use("*", requireAuth, requireRole("admin"));
 userRoutes.get("/", zValidator("query", paginationQuerySchema), async (c) => {
   const { page, limit } = c.req.valid("query");
 
-  const [rows, [{ value: total }]] = await Promise.all([
+  const [rows, totalResult] = await Promise.all([
     db
       .select({
         id: schema.users.id,
@@ -33,6 +33,7 @@ userRoutes.get("/", zValidator("query", paginationQuerySchema), async (c) => {
       .offset(offsetFor(page, limit)),
     db.select({ value: count() }).from(schema.users),
   ]);
+  const total = totalResult[0]?.value ?? 0;
 
   return c.json(paginate(rows, total, page, limit));
 });

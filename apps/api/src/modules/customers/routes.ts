@@ -36,10 +36,11 @@ customerRoutes.get("/", zValidator("query", paginationQuerySchema.extend({})), a
 
   const where = conditions.length ? and(...conditions) : undefined;
 
-  const [rows, [{ value: total }]] = await Promise.all([
+  const [rows, totalResult] = await Promise.all([
     db.select().from(schema.customers).where(where).orderBy(desc(schema.customers.createdAt)).limit(limit).offset(offsetFor(page, limit)),
     db.select({ value: count() }).from(schema.customers).where(where),
   ]);
+  const total = totalResult[0]?.value ?? 0;
 
   return c.json(paginate(rows, total, page, limit));
 });

@@ -14,4 +14,4 @@ COPY . .
 WORKDIR /app/apps/api
 ENV NODE_ENV=production
 EXPOSE 4000
-CMD ["bun", "src/index.ts"]
+CMD bunx --cwd ../../packages/db drizzle-kit push && bun src/index.ts
