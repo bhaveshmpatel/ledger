@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useApiGet } from "@/hooks/use-api";
 import { useAuth, can } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   }>({
     name: "", sku: "", category: "", unitPrice: "", minStockAlert: "", location: "",
   });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const product = data?.data;
 
@@ -92,6 +95,35 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     }
   }
 
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !product) return;
+    setUploadingImage(true);
+    try {
+      const { uploadUrl, publicUrl } = await api.post<{ uploadUrl: string; publicUrl: string }>(
+        `/products/${params.id}/image-upload-url`,
+        { contentType: file.type, extension: file.name.split(".").pop() },
+        accessToken!
+      );
+
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!uploadRes.ok) throw new Error("Upload to R2 failed");
+
+      await api.patch(`/products/${params.id}/image`, { imageUrl: publicUrl }, accessToken!);
+
+      await refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Image upload failed");
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   if (!product) return <p className="text-sm text-muted">Loading...</p>;
   const low = product.currentStock <= product.minStockAlert;
   const canEdit = can.manageProducts(user?.role);
@@ -118,6 +150,29 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
       <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="rounded-lg border border-line bg-white p-5 lg:col-span-1">
+          <div className="mb-6 flex flex-col items-center">
+            {product.imageUrl ? (
+              <img src={product.imageUrl} alt={product.name} className="h-40 w-40 rounded-lg object-cover border border-line" />
+            ) : (
+              <div className="flex h-40 w-40 items-center justify-center rounded-lg border border-dashed border-line bg-ink/5">
+                <span className="text-xs text-muted">No image</span>
+              </div>
+            )}
+            
+            {canEdit && (
+              <div className="mt-3">
+                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="focus-ring rounded-md border border-line px-3 py-1.5 text-xs font-medium hover:bg-ink/5 disabled:opacity-50"
+                >
+                  {uploadingImage ? "Uploading..." : product.imageUrl ? "Change Image" : "Upload Image"}
+                </button>
+              </div>
+            )}
+          </div>
+
           {editing ? (
             <form onSubmit={saveEdit} className="space-y-4">
               <p className="text-xs font-bold uppercase tracking-widest text-accent">Editing product</p>
