@@ -30,7 +30,7 @@ authRoutes.post("/login", zValidator("json", loginSchema), async (c) => {
 
   setCookie(c, "refresh_token", refreshToken, {
     httpOnly: true,
-    sameSite: "Lax",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
@@ -59,7 +59,11 @@ authRoutes.post("/refresh", async (c) => {
 });
 
 authRoutes.post("/logout", async (c) => {
-  deleteCookie(c, "refresh_token", { path: "/" });
+  deleteCookie(c, "refresh_token", {
+    path: "/",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    secure: process.env.NODE_ENV === "production",
+  });
   return c.json({ success: true });
 });
 
